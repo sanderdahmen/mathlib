@@ -32,6 +32,7 @@ dfinsupp.lmk β s
 
 def of (i : ι) : β i →ₗ direct_sum R ι β :=
 dfinsupp.lsingle β i
+
 variables {ι β}
 
 theorem mk_inj (s : finset ι) : function.injective (mk ι β s) :=
@@ -50,6 +51,11 @@ begin
   intros i b f h1 h2 ih,
   solve_by_elim
 end
+
+lemma sum_of [Π i, decidable_pred (eq (0 : β i))] (f : direct_sum R ι β) :
+  f.sum (λ i, of ι β i) = f :=
+by dsimp [of, dfinsupp.lsingle]; unfold_coes; simp;
+  exact @dfinsupp.sum_single ι β _ _ _ f
 
 variables {γ : Type u₁} [add_comm_group γ] [module R γ]
 variables (φ : Π i, β i →ₗ γ)
@@ -135,5 +141,30 @@ linear_equiv.of_linear (to_module _ $ λ _, linear_map.id) (of _ (λ _, M) punit
 
 instance : has_coe_to_fun (direct_sum R ι β) :=
 dfinsupp.has_coe_to_fun
+
+def component (ι : Type*) [decidable_eq ι] (β : ι → Type*)
+  [Π i, add_comm_group (β i)] [Π i, module R (β i)]
+  (i : ι) : direct_sum R ι β →ₗ β i :=
+{ to_fun := λ f, f i,
+  add := λ _ _, dfinsupp.add_apply,
+  smul := λ _ _, dfinsupp.smul_apply }
+
+lemma of_apply (i : ι) (b : β i) : ((of ι β i) b) i = b :=
+by rw [of, dfinsupp.lsingle_apply, dfinsupp.single_apply, dif_pos rfl]
+
+lemma apply_eq_component (f : direct_sum R ι β) (i : ι) :
+  f i = component ι β i f := rfl
+
+@[simp] lemma component.of (i : ι) (b : β i) :
+  component ι β i ((of ι β i) b) = b :=
+of_apply i b
+
+@[extensionality] lemma ext {f g : direct_sum R ι β}
+  (h : ∀ i, component ι β i f = component ι β i g) : f = g :=
+dfinsupp.ext h
+
+lemma ext_iff {f g : direct_sum R ι β} : f = g ↔
+  ∀ i, component ι β i f = component ι β i g :=
+⟨λ h _, by rw h, ext⟩
 
 end direct_sum
