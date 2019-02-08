@@ -24,6 +24,7 @@ install:
   - git clean -d -f -q
   - ./purge_olean.sh
   - rm mathlib.txt || true
+  - travis_long lean -v
 
 jobs:
   include:
